@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from .constants import COCO_CLASSES
+import yaml
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 IMAGENET_MEAN = torch.tensor ([0.485, 0.456, 0.406]).view (3, 1, 1)
@@ -252,4 +253,95 @@ def Validate_Yolo_Dataset (root, num_classes):
         
     return result
 
+def Write_Dataset_Yaml (root, num_classes, class_names = None):
+    if class_names is None:
+        if num_classes == len (COCO_CLASSES):
+            class_names = list (COCO_CLASSES)
+        else:
+            class_names = [f"class_{i}" for i in range (num_classes)]
+    
+    names = {i : class_names [i] if i < len (class_names) else f"class_{i}" for i in range (num_classes)}
+    payload = {
+        "path" : str (Path (root).resolve ()),
+        "train" : "images/train",
+        "val" : "images/val",
+        "nc" : num_classes,
+        "names" : names,
+    }
+    
+    with (Path (root) / "dataset.yaml").open ("w", encoding = "utf-8") as f:
+        yaml.safe_dump (payload, f, sort_keys = False)
+        
+def Build_Dataloaders (cfg):
+    data_cfg = cfg ["data"]
+    train_cfg = cfg ["train"]
+    augment_cfg = cfg.get ("augmentation", {})
+    root = Path (data_cfg ["root"])
+    image_size = int (cfg ["model"]["image_size"])
+    num_classes = int (cfg ["model"]["num_classes"])
+    workers = int (train_cfg.get ("workers", 0))
+    seed = int (data_cfg.get ("seed", cfg.get ("seed", 42)))
+    train_limit = Optional_Positive_Int (data_cfg.get ("max_train_images"))
+    val_limit = Optional_Positive_Int (data_cfg.get ("max_val_images"))
+    train_image_dir = root / "images" / "train"
+    train_label_dir = root / "labels" / "train"
+    
+    if bool (data_cfg.get ("val_from_train", False)):
+        val_image_dir = train_image_dir
+        val_label_dir = train_label_dir
+    else:
+        val_image_dir = root / "images" / "val"
+        val_label_dir = root / "labels" / "val"
+        val_seed = None
+    
+    train_dataset = YoloDetectionDataset (
+        train_image_dir, 
+        train_label_dir, 
+        image_size = image_size, 
+        num_classes = num_classes, 
+        augment = bool (augment_cfg.get ("enabled", True)),
+        hsv_h = float (augment_cfg.get ("hsv_h", 0.015)),
+        hsv_s = float (augment_cfg.get ("hsv_s", 0.7)),
+        hsv_v = float (augment_cfg.get ("hsv_v", 0.4)),
+        hflip_p = float (augment_cfg.get ("hflip_p", 0.5)),
+        max_images = train_limit,
+        subset_seed = seed,
+    )
+    
+    val_dataset = YoloDetectionDataset (
+        val_image_dir, 
+        val_label_dir, 
+        image_size = image_size, 
+        num_classes = num_classes, 
+        augment = False,
+        max_images = val_limit,
+        subset_seed = val_seed,
+    )
+    
+    common = {
+        "num_workers" : workers,
+        "pin_memory" : bool (train_cfg.get ("pin_memory", True)),
+        "collate_fn" : Collate_Fn,
+        "persistent_workers" : workers > 0,
+    }
+    
+    return (
+        DataLoader (train_dataset, batch_size = int (train_cfg ["batch_size"]), shuffle = True, drop_last = bool (train_cfg.get ("drop_last", False)), **common),
+        DataLoader (val_dataset, batch_size = int (train_cfg.get ("val_batch_size", train_cfg ["batch_size"])), shuffle = False, **common),
+    )
+    
+def Count_Images (root, split):
+    image_dir = Path (root) / "images" / split
+    
+    if not image_dir.exists ():
+        return 0
+    
+    return sum (1 for p in image_dir.iterdir () if p.suffix.lower () in IMAGE_EXTENSIONS)
 
+def Optional_Positive_Int (value):
+    if value is (None, ""):
+        return None
+    
+    parsed = int (value)
+    
+    return parsed if parsed > 0 else None
