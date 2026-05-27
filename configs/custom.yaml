@@ -1,0 +1,63 @@
+seed: 42
+device: auto
+
+classes:
+  - class_0
+  - class_1
+
+model:
+  image_size: 640
+  backbone: resnet34
+  pretrained_backbone: true
+  fpn_channels: 128
+  head_channels: 128
+  freeze_backbone_epochs: 1
+
+data:
+  root: data/custom_yolo
+  state_path: data/custom_state.json
+  auto_prepare: false
+  train_samples: 0
+  val_samples: 0
+  seed: 42
+
+augmentation:
+  enabled: true
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  hflip_p: 0.5
+
+loss:
+  obj_weight: 1.0
+  cls_weight: 1.0
+  box_weight: 5.0
+  l1_weight: 0.25
+  focal_alpha: 0.25
+  focal_gamma: 2.0
+  center_radius: 1
+
+train:
+  run_name: custom_resnet34
+  output_dir: outputs/runs
+  epochs: 50
+  batch_size: 4
+  val_batch_size: 4
+  workers: 4
+  pin_memory: true
+  drop_last: false
+  grad_accum: 2
+  lr: 0.0005
+  min_lr_ratio: 0.05
+  weight_decay: 0.05
+  warmup_steps: 250
+  total_steps: 50000
+  amp: true
+  grad_clip_norm: 10.0
+  checkpoint_steps: 200
+  checkpoint_minutes: 15
+  val_max_batches: 50
+  vis_every_images: 100
+  vis_max_images: 2
+  vis_conf_threshold: 0.25
+  vis_iou_threshold: 0.45
