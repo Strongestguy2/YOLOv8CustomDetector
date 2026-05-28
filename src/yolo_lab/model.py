@@ -21,6 +21,29 @@ class ConvNormAct (nn.Sequential):
             nn.GroupNorm (groups, out_channels),
             nn.SiLU (inplace = True),
         )
+
+class ResNetFeatureBackbone (nn.Module):
+    def __init__ (self, name, pretrained):
+        super ().__init__ ()
         
+        if name == "resnet34":
+            weights = ResNet34_Weights.IMAGENET1K_V1 if pretrained else None
+            backbone = resnet34 (weights = weights)
+            channels = [128, 256, 512]
+        elif name == "resnet50":
+            weights = ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
+            backbone = resnet50 (weights = weights)
+            channels = [512, 1024, 2048]
+        else:
+            raise ValueError (f"Unsupported backbone: {name}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+            
+        self.body = create_feature_extractor (backbone, return_nodes = {"layer2": "p3", "layer3": "p4", "layer4": "p5"})
+        self.out_channels = channels
+        
+    def forward (self, x):
+        out = self.body (x)
+        return [out ["p3"], out ["p4"], out ["p5"]]
+    
+
 
         
