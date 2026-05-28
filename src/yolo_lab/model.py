@@ -44,6 +44,43 @@ class ResNetFeatureBackbone (nn.Module):
         out = self.body (x)
         return [out ["p3"], out ["p4"], out ["p5"]]
     
-
+class DetectionHead (nn.Module):
+    def __init__  (self, channels, num_classes, head_channels, levels = 3):
+        super().__init__ ()
+        self.cls_towers = nn.ModuleList ()
+        self.box_towers = nn.ModuleList ()
+        self.cls_preds = nn.ModuleList ()
+        self.obj_preds = nn.ModuleList ()
+        
+        for _ in range (levels):
+            self.cls_towers.append (nn.Sequential (ConvNormAct (channels, head_channels), ConvNormAct (head_channels, head_channels)))
+            self.box_towers.append (nn.Sequential (ConvNormAct (channels, head_channels), ConvNormAct (head_channels, head_channels)))
+            self.cls_preds.append (nn.Conv2d (head_channels, 1, 1))
+            self.obj_preds.append (nn.Conv2d (head_channels, 4, 1))
+            
+        self._init_biases ()
+        
+    def _init_biases (self):
+        prior = 0.01
+        bias = -torch.log (torch.tensor ((1 - prior) / prior)).item ()
+        
+        for pred in [*self.cls_preds, *self.obj_preds]:
+            nn.init.constant_ (pred.bias, bias)
+            
+    def forward (self, features):
+        cls_out = []
+        obj_out = []
+        box_out = []
+        
+        for i, feature in enumerate (features):
+            cls_feat = self.cls_towers [i] (feature)
+            box_feat = self.box_towers [i] (feature)
+            cls_out.append (self.cls_preds [i] (cls_feat))
+            obj_out.append (self.obj_preds [i] (cls_feat))
+            box_out.append (self.box_preds [i] (box_feat))
+            
+        return {"cls": cls_out, "obj": obj_out, "box": box_out}
+        
+            
 
         
