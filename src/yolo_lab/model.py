@@ -80,7 +80,41 @@ class DetectionHead (nn.Module):
             box_out.append (self.box_preds [i] (box_feat))
             
         return {"cls": cls_out, "obj": obj_out, "box": box_out}
+    
+class YoloStyleDetector (nn.Module):
+    def __init__ (self, num_classes, backbone_name = "resnet34", pretrained_backbone = True, fpn_channels = 128, head_channels = 128, freeze_backbone_epochs = 0,):
+        super ().__init__ ()
+        self.backbone = ResNetFeatureBackbone (backbone_name, pretrained_backbone)
+        self.fpn = FeaturePyramidNetwork (self.backbone.out_channels, fpn_channels)
+        self.head = DetectionHead (fpn_channels, num_classes, head_channels)
+        self.strides = [8, 16, 32]
+        self.freeze_backbone_epochs = freeze_backbone_epochs
         
+    def Set_Backbone_Trainable (self, trainable):
+        for param in self.backbone.parameters ():
+            param.requires_grad_ (trainable)
             
-
-        
+    def Apply_Freeze_Schedule (self, epoch):
+        if self.freeze_backbone_epochs > 0:
+            self.Set_Backbone_Trainable (epoch >= self.freeze_backbone_epochs)
+            
+    def forward (self, x):
+        c3, c4, c5 = self.backbone (x)
+        fpn_out = self.fpn ({"p3": c3, "p4": c4, "p5": c5})
+        features = [fpn_out ["p3"], fpn_out ["p4"], fpn_out ["p5"]]
+        out = self.head (features)
+        out ["strides"] = self.strides
+        return out
+    
+def Build_Model (cfg, pretrained = None):
+    model_cfg = cfg ["model"]
+    pretrained_backbone = bool (model_cfg.get ("pretrained_backbone", True) if pretrained is None else pretrained)
+    
+    return YoloStyleDetector (
+        num_classes = int (model_cfg ["num_classes"]),
+        backbone_name = str (model_cfg.get ("backbone", "resnet34")),
+        pretrained_backbone = pretrained_backbone,
+        fpn_channels = int (model_cfg.get ("fpn_channels", 128)),
+        head_channels = int (model_cfg.get ("head_channels", 128)),
+        freeze_backbone_epochs = int (model_cfg.get ("freeze_backbone_epochs", 0)),
+    )
