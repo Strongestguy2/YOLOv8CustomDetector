@@ -18,7 +18,7 @@ def Checkpoint_Payload (model, optimizer, escheduler, scaler, cfg, epoch, global
     }
     
 def Save_Training_Checkpoint (path, **payload):
-    Atomic_Torch_Save (payload, Path)
+    Atomic_Torch_Save (payload, path)
 
 def Load_Training_Checkpoint (path, model, optimizer = None, scheduler = None, scaler = None, device = "cpu"):
     checkpoint = torch.load (path, map_location = device, weights_only = False)
