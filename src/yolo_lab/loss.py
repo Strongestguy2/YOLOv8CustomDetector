@@ -103,3 +103,76 @@ class YoloLoss (nn.Module):
             return 1
         return 2
     
+    def _build_targets (self, outputs, targets):
+        batch_size = outputs ["obj"][0].shape [0]
+        device = outputs ["obj"][0].device
+        target_maps = []
+        
+        for level, obj in enumerate (outputs ["obj"]):
+            _, _, h, w = obj.shape
+            target_maps.append ({
+                "obj" : torch.zeros ((batch_size, 1, h, w), device = device),
+                "cls" : torch.zeros ((batch_size, self.num_classes, h, w), device = device),
+                "box" : torch.zeros ((batch_size, 4, h, w), device = device),
+                "xyxy" : torch.zeros ((batch_size, 4, h, w), device = device),
+                "area" : torch.full ((batch_size, 1, h, w), float ("inf"), device = device),
+            })
+            
+        boxes = targets ["boxes"].to (device)
+        labels = targets ["labels"].to (device)
+        batch_idx = targets ["batch_idx"].to (device)
+        
+        for i in range (len (labels)):
+            box = boxes [i].clamp (0, self.image_size)
+            
+            if box [2] <= box [0] or box [3] <= box [1]:
+                continue
+            
+            label = int (labels [i].item ())
+            level = self._target_level (box)
+            stride = self.strides [level]
+            _, _, h, w = outputs ["obj"][level].shape
+            cx = (box [0] + box [2]) * 0.5
+            cy = (box [1] + box [3]) * 0.5
+            gx = int (torch.clamp (torch.floor (cx / stride), 0, w - 1).item ())
+            gy = int (torch.clamp (torch.floor (cy / stride), 0, h - 1).item ())
+            b = int (batch_idx [i].item ())
+            area = (box [2] - box [0]) * (box [3] - box [1])
+            
+            for cell_x, cell_y in self._candidate_cells (box, gx, gy, w, h, stride):
+                if area >= target_maps [level] ["area"][b, 0, cell_y, cell_x]:
+                    continue
+                
+                center_x = (cell_x + 0.5) * stride
+                center_y = (cell_y + 0.5) * stride
+                letterbox = torch.tensor (
+                    [center_x - box [0], center_y - box [1], box [2] - center_x, box [3] - center_y], 
+                    device = device, 
+                    dtype = torch.float32
+                    ).clamp (min = 0.01) / stride
+                
+                target_maps [level]["obj"][b, 0, cell_y, cell_x] = 1.0
+                target_maps [level]["cls"][b, :, cell_y, cell_x] = 0.0
+                target_maps [level]["cls"][b, label, cell_y, cell_x] = 1.0
+                target_maps [level]["box"][b, :, cell_y, cell_x] = letterbox
+                target_maps [level]["xyxy"][b, :, cell_y, cell_x] = box
+                target_maps [level]["area"][b, 0, cell_y, cell_x] = area
+        
+        return target_maps
+    
+    def _candidate_cells (self, box, gx, gy, w, h, stride):
+        if self.center_radius <= 0:
+            return [(gx, gy)]
+        
+        cells = []
+        
+        for cell_y in range (max (0, gy - self.center_radius), min (h - 1, gy + self.center_radius) + 1):
+            center_y = (cell_y + 0.5) * stride
+            
+            for cell_x in range (max (0, gx - self.center_radius), min (w - 1, gx + self.center_radius) + 1):
+                center_x = (cell_x + 0.5) * stride
+                
+                if box [0] <= center_x <= box [2] and box [1] <= center_y <= box [3]:
+                    cells.append ((cell_x, cell_y))
+                
+        return cells or [(gx, gy)]
