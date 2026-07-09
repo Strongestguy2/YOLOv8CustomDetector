@@ -130,7 +130,7 @@ def _classes_with_ground_truths (ground_truths, num_classes):
     
     return classes
 
-def _mean_avaerage_precision_at_iou (predictions, ground_truths, num_classes, iou_threshold):
+def _mean_average_precision_at_iou (predictions, ground_truths, num_classes, iou_threshold):
     aps = []
     
     for class_id in range (num_classes):
@@ -218,3 +218,48 @@ def _precision_recall_counts (predictions, ground_truths, metric_conf_threshold,
     
     for image_index, target in enumerate (ground_truths):
         total_gt += len (target ["labels"])
+        
+        for class_id in target ["labels"].unique ().tolist ():
+            class_int = int (class_id)
+            count = int ((target ["labels"] == class_int).sum ().item ())
+            matched [(image_index, class_int)] = torch.zeros (count, dtype = torch.bool)
+            
+    candidates = []
+    
+    for image_index, pred in enumerate (predictions):
+        if pred.numel () == 0:
+            continue
+        
+        keep = pred [:, 4] >= metric_conf_threshold
+        
+        for row in pred [keep]:
+            candidates.append ((image_index, int (row [5].item ()), float (row [4].item ()), row [:4].float ()))
+            
+    candidates.sort (key = lambda item: item [2], reverse = True)
+    
+    tp = 0
+    fp = 0
+    
+    for image_index, class_id, _score, box in candidates:
+        target = ground_truths [image_index]
+        gt_mask = target ["labels"] == class_id
+        gt_boxes = target ["boxes"] [gt_mask].float ()
+        
+        if len (gt_boxes) == 0:
+            fp += 1
+            continue
+        
+        ious = box_iou (box.unsqueeze (0), gt_boxes).squeeze (0)
+        best_iou, best_idx = ious.max (dim = 0)
+        key = (image_index, class_id)
+        best_idx_int = int (best_idx.item ())
+        
+        if float (best_iou) >= match_iou_threshold and not bool (matched [key][best_idx_int]):
+            matched [key][best_idx_int] = True
+            tp += 1
+        else:
+            fp += 1
+            
+    return {"tp" : tp, "fp" : fp, "fn" : max (0, total_gt - tp)}
+
+
