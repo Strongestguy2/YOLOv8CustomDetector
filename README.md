@@ -25,7 +25,7 @@ Head: Dense objectness/class/box heads
 
 ## Demo
 
-https://strongestguy2.github.io/Yolo-v8-With-COCO-2017-Dataset/
+https://strongestguy2.github.io/YOLOv8CustomDetector/
 
 ## Install
 
@@ -62,152 +62,75 @@ Click **Create tiny synthetic demo and config** in the Dataset tab. It creates o
 
 ## Custom Dataset
 
-Use standard YOLO detection layout:
+Use the standard YOLO detection layout:
 
 ```text
-data/custom_yolo/
+data/my_dataset/
   images/
     train/
-      image_001.jpg
     val/
-      image_101.jpg
   labels/
     train/
-      image_001.txt
     val/
-      image_101.txt
 ```
 
-Each label row must be:
+Each image has a matching `.txt` label file. Each row is:
 
 ```text
 class_id center_x center_y width height
 ```
 
-All coordinates are normalized from `0` to `1`, and `class_id` is zero-based.
+Class IDs are zero-based. 
 
-Copy or edit [configs/custom.yaml](configs/custom.yaml). Replace the `classes` list and point `data.root` at your dataset:
+The default [custom configuration](configs/custom.yaml) does not download anything. Class names entered in the panel determine `model.num_classes` and are preserved in annotations and exports.
 
-```yaml
-classes:
-  - scratch
-  - dent
-  - missing_part
-
-data:
-  root: data/custom_yolo
-  auto_prepare: false
-```
-
-Validate the dataset before training:
+## Optionl COCO Baseline
+As this project is originally designed for COCO, COCO is optional and isolated from the core installation.
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\validate_dataset.py --config configs\custom.yaml --write-dataset-yaml
-```
-
-## Training
-
-For custom data, keep COCO auto-preparation disabled and train from the custom config:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\universal_train.py --config configs\custom.yaml
-```
-
-Useful overrides:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\universal_train.py --config configs\custom.yaml --max-steps 100
-.\.venv\Scripts\python.exe scripts\universal_train.py --config configs\custom.yaml --set train.batch_size=2 --set train.total_steps=20000
-```
-
-Outputs are written to `outputs/runs/<run_name>/`:
-
-- `checkpoints/last.pt` latest resumable checkpoint.
-- `checkpoints/best.pt` best validation-loss checkpoint.
-- `train_log.csv` step-by-step training logs.
-- `visuals/` prediction-vs-target preview images.
-- `config.yaml` resolved run configuration.
-
-## COCO Baseline
-
-The default config stages a subset of COCO automatically through FiftyOne:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\universal_train.py --config configs\coco_resnet34.yaml --download-increment 1000
-```
-
-Increase `data.train_samples`, `data.val_samples`, or `--download-increment` as you scale the baseline.
-
-## Inference
-
-Run prediction on one image:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\predict.py --config configs\custom.yaml --weights outputs\runs\custom_resnet34\checkpoints\best.pt --source path\to\image.jpg --save
-```
-
-Run prediction on a folder and save JSON:
-
-```powershell
-.\.venv\Scripts\python.exe scripts\predict.py --config configs\custom.yaml --weights outputs\runs\custom_resnet34\checkpoints\best.pt --source path\to\images --recursive --save --json-output outputs\predictions\predictions.json
-```
-
-Annotated images are saved under `outputs/predictions/` by default.
-
-## Demo App
-
-```powershell
-.\.venv\Scripts\python.exe scripts\demo.py --config configs\custom.yaml --weights outputs\runs\custom_resnet34\checkpoints\best.pt
-```
-
-Open `http://127.0.0.1:7860`, upload an image, and tune the confidence/NMS sliders.
-
-## Evaluation
-
-```powershell
-.\.venv\Scripts\python.exe scripts\evaluate.py --config configs\custom.yaml --weights outputs\runs\custom_resnet34\checkpoints\best.pt --detection-metrics --json-output outputs\eval\metrics.json
-```
-
-This reports validation loss, prediction counts, AP50, AP75, mAP50-95, precision, recall, and F1.
-
-## Control Panel
-
-On Windows, double-click:
-
-```text
-start_panel.bat
-```
-
-The panel opens in the browser and covers the main workflow without typing training commands:
-
-- Edit, create, save, and delete YAML configs.
-- Set classes, dataset root, run name, batch size, steps, image size, backbone, AMP, workers, and preview frequency.
-- Validate YOLO-format datasets from the UI.
-- Start, resume, stop, and monitor training.
-- Hide branch checkpoint fields unless Branch mode is selected.
-- Run predictions from a checkpoint against a configured image or folder source.
-- Compare checkpoints with validation metrics.
-
-You can also launch it manually:
-
-```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-coco.txt
 .\.venv\Scripts\python.exe scripts\panel.py
 ```
 
-## Project Layout
+Then select `configs/coco_resnet34.yaml` in the panel. 
 
-```text
-configs/          training configs and custom dataset template
-scripts/          train, validate, predict, demo, evaluate, panel
-src/yolo_lab/     model, loss, data, inference, metrics, checkpoints
-tests/            smoke and regression tests
+## Automation
+For those that actually want to work inside cli rather than the ui despite this whole project is optimised for a no code workflow:
+
+```powershell
+# Tiny smoke run
+.\.venv\Scripts\python.exe scripts\create_demo_dataset.py
+.\.venv\Scripts\python.exe scripts\universal_train.py --smoke --max-steps 1
+
+# Validation and training custom data
+.\.venv\Scripts\python.exe scripts\validate_dataset.py --config configs\custom.yaml --write-dataset-yaml
+.\.venv\Scripts\python.exe scripts\universal_train.py --config configs\custom.yaml
+
+# Prediction
+.\.venv\Scripts\python.exe scripts\predict.py --config configs\custom.yaml --weights outputs\runs\my_run\checkpoints\best.pt --source images --recursive --save --json-output outputs\predictions\results.json
+
+# Evaluate a checkpoint
+.\.venv\Scripts\python.exe scripts\evaluate.py --config configs\custom.yaml --weights outputs\runs\my_run\checkpoints\best.pt --detection-metrics --json-output outputs\evaluations\metrics.json
 ```
 
-## Prototype Notes
+Training writes to `outputs/runs/<run_name>/`:
 
-This is a prototype detector. It is designed for quick iteration, readable code, and custom YOLO-format data. For serious benchmarking, train long enough on a real validation split, inspect `visuals/`, and use `scripts/evaluate.py --detection-metrics` before trusting the model.
+- `checkpoints/last.pt` — latest resumable state.
+- `checkpoints/best.pt` — best validation-loss state.
+- `checkpoints/safe_stop.pt` — interruption-safe state.
+- `config.yaml` — resolved run configuration.
+- `train_log.csv` — step-by-step training metrics.
+- `visuals/` — prediction-vs-target previews.
 
+## Development
 
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m compileall -q src scripts tests
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m ruff check src scripts tests
+.\.venv\Scripts\python.exe scripts\verify_pages_demo.py
+```
 
 
 
