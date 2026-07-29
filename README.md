@@ -23,19 +23,42 @@ Head: Dense objectness/class/box heads
 - Gradio image upload demo with confidence and NMS controls.
 - Training preview images that compare predictions against targets.
 
-## Setup
+## Demo
+
+https://strongestguy2.github.io/Yolo-v8-With-COCO-2017-Dataset/
+
+## Install
+
+Windows users can double-click:
+
+```text
+start_panel.bat
+```
+
+On first launch it:
+1. Creates `.venv and install the application
+2. Opens the pane; at `http://127.0.0.1:7860`
+
+Manual setup:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -e .
+.\.venv\Scripts\python.exe scripts\panel.py
 ```
 
-Run a one-step smoke check before using a real dataset:
+## First Run
 
-```powershell
-.\.venv\Scripts\python.exe scripts\universal_train.py --smoke --max-steps 1
-```
+1. Open **Configure** and set your class names and dataset root.
+2. Save the configuration.
+3. Open **Dataset** and validate it.
+4. Open **Train**, choose **Smoke test**, and run one step to check the installation.
+5. Start a new training session with your configuration.
+6. Select the generated `best.pt` in **Predict** or **Evaluate**.
+
+## Offline Walkthrough
+
+Click **Create tiny synthetic demo and config** in the Dataset tab. It creates one generated training image and one validation image.
 
 ## Custom Dataset
 
