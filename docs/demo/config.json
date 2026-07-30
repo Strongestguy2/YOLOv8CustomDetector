@@ -1,0 +1,9 @@
+{
+  "name": "tiny-pets-demo",
+  "classes": ["cat", "dog"],
+  "image_size": 48,
+  "epochs": 160,
+  "learning_rate": 0.12,
+  "seed": 8,
+  "note": "Educational two class photo detector"
+}
