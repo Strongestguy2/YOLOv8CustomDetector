@@ -1,115 +1,251 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Universal YOLO Detector Demo" />
+    <title>Universal YOLO Detector Demo</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Universal YOLO Detector Demo">
-  <title> Universal YOLO Detector Demo</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css">
-</head>
+  <body>
+    <main class="app-shell">
+      <header>
+        <div>
+          <p class="eyebrow">Demo</p>
+          <h1>Universal YOLO Detector</h1>
+          <p class="lede">
+            Configure, validate, train, predict, evaluate, codeless
+          </p>
+        </div>
+        <a
+          class="repo-link"
+          href="https://github.com/Strongestguy2/YOLOv8CustomDetector"
+        >
+          View repository ↗
+        </a>
+      </header>
 
-<body>
-  <main class="app-shell">
-    <header>
-      <div>
-        <p class="eyebrow"> Demo</p>
-        <h1> Universal YOLO Detector</h1>
-        <p class="lede"> Configure, validate, train, predict, evaluate, codeless</p>
-      </div>
-      <a class="repo-link" href="https://github.com/Strongestguy2/YOLOv8CustomDetector"> View repository ↗ </a>
-    </header>
+      <section class="notice" aria-label="Demo limitation">
+        <strong> Fast and educational.</strong> This page trains a tiny two
+        class photo model of cats and dogs because we all love them. Meanwhile
+        the desktop app uses the full PyTorch detector, datasets, and resumable
+        <code>.pt</code>
+        checkpoints.
+      </section>
 
-    <selection class="notice" aria-label="Demo limitation">
-      <strong> Fast and educational.</strong> This page trains a tiny two class photo model of cats and dogs because we
-      all love them. Meanwhile the desktop app uses the full PyTorch detector, datasets, and resumable <code>.pt</code>
-      checkpoints.
-    </selection>
-
-    <selection class="top-control panel">
-      <label>Active configuration</label>
-      <div class="conotrol-line">
-        <div class="locked grow" tabindex="0" data-tooltip="Load and save any YAML project configuration">
-          <select disabled aria-label="Active configuration">
-            <option> configs/tiny_pets_demo.yaml</option>
-          </select>
-        </div>
-        <div class="locked" tabindex="0" data-tooltip="Refreshes configuration files">
-          <button disabled>Refresh configs</button>
-        </div>
-      </div>
-    </selection>
-
-     <nav class="tabs" aria-label="Application sections">
-      <span class="locked-tab" tabindex="0" data-tooltip="Configure the training settings">1. Configure</span>
-      <span class="locked-tab" tabindex="0" data-tooltip="Choose and validate a dataset">2. Dataset</span>
-      <span class="active-tab" aria-current="page">3. Train</span>
-      <span class="locked-tab" tabindex="0" data-tooltip="Run a trained checkpoint">4. Predict</span>
-      <span class="locked-tab" tabindex="0" data-tooltip="Calculate AP, precision, recall, and validation loss">5. Evaluate</span>
-      <span class="locked-tab" tabindex="0" data-tooltip="For full setup guide check README.md">Help</span>
-    </nav>
-
-    <section class="workspace">
-      <aside class="panel controls">
-        <h2>Training controls</h2>
-        <div class="locked" tabindex="0" data-tooltip="Choose smoke test, resume, or branch from checkpoint">
-          <label>Mode</label><input disabled value="Two-class photo demo">
-        </div>
-        <div class="locked" tabindex="0" data-tooltip="Restores model, optimizer, scheduler, scaler, epoch, and step state">
-          <label><input type="checkbox" checked disabled> Resume</label>
-        </div>
-        <div class="two-col">
-          <div class="locked" tabindex="0" data-tooltip="Set maximum number of steps"><label>Max steps</label><input disabled value="160"></div>
-          <div class="locked" tabindex="0" data-tooltip="Set maximum elapsed wall-clock time "><label>Max hours</label><input disabled value="0"></div>
-        </div>
-        <div class="locked" tabindex="0" data-tooltip="Auto uses CUDA first, Apple MPS second, and CPU otherwise">
-          <label>Compute device</label><input disabled value="Browser CPU (demo only)">
-        </div>
-        <div class="button-row">
-          <button id="train-button" class="primary">Train / Resume</button>
-          <button id="stop-button" disabled>Stop</button>
-        </div>
-        <div class="locked" tabindex="0" data-tooltip="Creates a separate clean run directory"><button disabled>Start New Session</button></div>
-        <div class="locked" tabindex="0" data-tooltip="Removes generated caches"><button disabled>Clean Project Caches</button></div>
-        <label>Action status</label>
-        <output id="action-status" class="status-box" aria-live="polite">Loading the bundled demo…</output>
-      </aside>
-
-      <div class="results">
-        <section class="panel run-panel">
-          <div class="run-heading">
-            <div><span class="muted">RUN</span><h2> Cat / Dog demo</h2></div>
-            <span id="run-badge" class="badge ready">READY</span>
+      <section class="top-control panel">
+        <label>Active configuration</label>
+        <div class="control-line">
+          <div
+            class="locked grow"
+            tabindex="0"
+            data-tooltip="Load and save any YAML project configuration"
+          >
+            <select disabled aria-label="Active configuration">
+              <option>configs/tiny_pets_demo.yaml</option>
+            </select>
           </div>
-          <div class="metrics">
-            <div><span>Epoch</span><strong id="epoch-value">0 / 160</strong></div>
-            <div><span>Loss</span><strong id="loss-value">—</strong></div>
-            <div><span>Samples</span><strong id="sample-value">8</strong></div>
+          <div
+            class="locked"
+            tabindex="0"
+            data-tooltip="Refreshes configuration files"
+          >
+            <button disabled>Refresh configs</button>
           </div>
-          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="160" aria-valuenow="0"><span id="progress-fill"></span></div>
-        </section>
-        
-        <section class="grid-two">
-          <article class="panel chart-panel">
-            <div class="panel-title"><h2>Training loss</h2><span class="legend"><i></i> MSE</span></div>
-            <canvas id="loss-chart" width="720" height="320" aria-label="Training loss chart"></canvas>
-          </article>
-          <article class="panel preview-panel">
-            <div class="panel-title"><h2>Prediction vs target</h2><span class="muted" id="sample-id">cat-01</span></div>
-            <canvas id="preview" width="520" height="420" aria-label="Bounding box preview"></canvas>
-            <div class="box-legend"><span class="target-key">Target</span><span class="prediction-key">Prediction</span></div>
-          </article>
-        </section>
+        </div>
+      </section>
 
-        <section class="panel log-panel">
-          <h2>Recent training rows</h2>
-          <div class="table-wrap"><table><thead><tr><th>Epoch</th><th>Loss</th><th>Total error</th><th>Learning rate</th><th>Status</th></tr></thead><tbody id="log-body"><tr><td colspan="5" class="empty">Click Train / Resume to begin</td></tr></tbody></table></div>
-        </section>
-      </div>
-    </section>
-    <footer> Dataset: 8 AI generated pet photos to avoid copyright issues · Classes: cat and dog</footer>
-  </main>
-  <script src = "app.js" defer></script>
-</body>
+      <nav class="tabs" aria-label="Application sections">
+        <span
+          class="locked-tab"
+          tabindex="0"
+          data-tooltip="Configure the training settings"
+          >1. Configure</span
+        >
+        <span
+          class="locked-tab"
+          tabindex="0"
+          data-tooltip="Choose and validate a dataset"
+          >2. Dataset</span
+        >
+        <span class="active-tab" aria-current="page">3. Train</span>
+        <span
+          class="locked-tab"
+          tabindex="0"
+          data-tooltip="Run a trained checkpoint"
+          >4. Predict</span
+        >
+        <span
+          class="locked-tab"
+          tabindex="0"
+          data-tooltip="Calculate AP, precision, recall, and validation loss"
+          >5. Evaluate</span
+        >
+        <span
+          class="locked-tab"
+          tabindex="0"
+          data-tooltip="For full setup guide check README.md"
+          >Help</span
+        >
+      </nav>
+
+      <section class="workspace">
+        <aside class="panel controls">
+          <h2>Training controls</h2>
+          <div
+            class="locked"
+            tabindex="0"
+            data-tooltip="Choose smoke test, resume, or branch from checkpoint"
+          >
+            <label>Mode</label><input disabled value="Two-class photo demo" />
+          </div>
+          <div
+            class="locked"
+            tabindex="0"
+            data-tooltip="Restores model, optimizer, scheduler, scaler, epoch, and step state"
+          >
+            <label><input type="checkbox" checked disabled /> Resume</label>
+          </div>
+          <div class="two-col">
+            <div
+              class="locked"
+              tabindex="0"
+              data-tooltip="Set maximum number of steps"
+            >
+              <label>Max steps</label><input disabled value="160" />
+            </div>
+            <div
+              class="locked"
+              tabindex="0"
+              data-tooltip="Set maximum elapsed wall-clock time "
+            >
+              <label>Max hours</label><input disabled value="0" />
+            </div>
+          </div>
+          <div
+            class="locked"
+            tabindex="0"
+            data-tooltip="Auto uses CUDA first, Apple MPS second, and CPU otherwise"
+          >
+            <label>Compute device</label
+            ><input disabled value="Browser CPU (demo only)" />
+          </div>
+          <div class="button-row">
+            <button id="train-button" class="primary">Train / Resume</button>
+            <button id="stop-button" disabled>Stop</button>
+          </div>
+          <div
+            class="locked"
+            tabindex="0"
+            data-tooltip="Creates a separate clean run directory"
+          >
+            <button disabled>Start New Session</button>
+          </div>
+          <div
+            class="locked"
+            tabindex="0"
+            data-tooltip="Removes generated caches"
+          >
+            <button disabled>Clean Project Caches</button>
+          </div>
+          <label>Action status</label>
+          <output id="action-status" class="status-box" aria-live="polite"
+            >Loading the bundled demo…</output
+          >
+        </aside>
+
+        <div class="results">
+          <section class="panel run-panel">
+            <div class="run-heading">
+              <div>
+                <span class="muted">RUN</span>
+                <h2>Cat / Dog demo</h2>
+              </div>
+              <span id="run-badge" class="badge ready">READY</span>
+            </div>
+            <div class="metrics">
+              <div>
+                <span>Epoch</span><strong id="epoch-value">0 / 160</strong>
+              </div>
+              <div><span>Loss</span><strong id="loss-value">—</strong></div>
+              <div>
+                <span>Samples</span><strong id="sample-value">8</strong>
+              </div>
+            </div>
+            <div
+              class="progress-track"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="160"
+              aria-valuenow="0"
+            >
+              <span id="progress-fill"></span>
+            </div>
+          </section>
+
+          <section class="grid-two">
+            <article class="panel chart-panel">
+              <div class="panel-title">
+                <h2>Training loss</h2>
+                <span class="legend"><i></i> MSE</span>
+              </div>
+              <canvas
+                id="loss-chart"
+                width="720"
+                height="320"
+                aria-label="Training loss chart"
+              ></canvas>
+            </article>
+            <article class="panel preview-panel">
+              <div class="panel-title">
+                <h2>Prediction vs target</h2>
+                <span class="muted" id="sample-id">cat-01</span>
+              </div>
+              <canvas
+                id="preview"
+                width="520"
+                height="420"
+                aria-label="Bounding box preview"
+              ></canvas>
+              <div class="box-legend">
+                <span class="target-key">Target</span
+                ><span class="prediction-key">Prediction</span>
+              </div>
+            </article>
+          </section>
+
+          <section class="panel log-panel">
+            <h2>Recent training rows</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Epoch</th>
+                    <th>Loss</th>
+                    <th>Total error</th>
+                    <th>Learning rate</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="log-body">
+                  <tr>
+                    <td colspan="5" class="empty">
+                      Click Train / Resume to begin
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </section>
+      <footer>
+        Dataset: 8 AI generated pet photos to avoid copyright issues · Classes:
+        cat and dog
+      </footer>
+    </main>
+    <script src="app.js" defer></script>
+  </body>
 </html>
