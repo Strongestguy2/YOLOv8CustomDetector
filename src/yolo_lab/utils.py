@@ -20,10 +20,20 @@ def Set_Seed (seed):
     torch.backends.cudnn.benchmark = True
 
 def Get_Device (requested = "auto"):
-    if requested == "auto":
-        return torch.device ("cuda" if torch.cuda.is_available () else "cpu")
+    choice = requested.strip ().lower ()
+    mps_available = bool (hasattr (torch.backends, "mps") and torch.backend.mps.is_available ())
     
-    return torch.device (requested)
+    if choice == "auto":
+        if torch.cuda.is_available ():
+            return torch.device ("cuda")
+        elif mps_available:
+            return torch.device ("mps")
+        return torch.device ("cpu")
+    
+    if choice == "cuda" and not torch.cuda.is_available ():
+        return RuntimeError ("CUDA was selected but torch cannot find it.")
+    if choice == "mps" and not mps_available:
+        raise RuntimeError ("Applications MPS was selected but it is unavailable on this computer.")
 
 def Atomic_Torch_Save (payload, path):
     destination = Path (path)
