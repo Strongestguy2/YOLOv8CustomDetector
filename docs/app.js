@@ -211,11 +211,11 @@ function drawPreview (sample) {
     const targetBox = boxPixels (target, ui.preview);
     const predictedBox = boxPixels (estimated, ui.preview);
 
-    ctx.strokeStyle = "#30d158";
+    ctx.strokeStyle = "#138086";
     ctx.lineWidth = 4;
     ctx.strokeRect (targetBox.x, targetBox.y, targetBox.w, targetBox.h);
 
-    ctx.strokeStyle = "#ff375f";
+    ctx.strokeStyle = "#dc8665";
     ctx.lineWidth = 4;
     ctx.strokeRect (predictedBox.x, predictedBox.y, predictedBox.w, predictedBox.h);
 
@@ -223,7 +223,7 @@ function drawPreview (sample) {
     const confidence = predictedId ? estimated [4] : 1 - estimated [4];
 
     ctx.font = "600 17px -apple-system, system-ui";
-    ctx.fillStyle = "rgba(29, 29, 31, .88)";
+    ctx.fillStyle = "#1d1d1f";
     ctx.fillRect (8, 8, 205, 29);
     ctx.fillStyle = "#fff";
     ctx.fillText  (`${dataset.class_names [predictedId]} ${(confidence * 100).toFixed (0)}%`, 16, 29);
@@ -302,7 +302,7 @@ async function initialise () {
         prepareFeatures ();
         resetModel ();
         ui.sampleCount.textContent = String (dataset.samples.length);
-        ui.status.textContent = "Ready. Click Train / Resume to learn the cat / dog classses and bounding boxes from the bundled photos.";
+        ui.status.textContent = ">Ready. Click Train / Resume to learn the cat / dog classses and bounding boxes from the bundled photos.";
         updateState (Number.NaN);
     } catch (error) {
         ui.status.textContent = `Could not load the bundled demo: ${error.message}`;
