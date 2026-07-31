@@ -1,9 +1,9 @@
 seed: 42
 device: auto
 
+# Replace these names in the UI. model.num_classes is derived automatically.
 classes:
-  - class_0
-  - class_1
+  - object
 
 model:
   image_size: 640
@@ -14,9 +14,10 @@ model:
   freeze_backbone_epochs: 1
 
 data:
+  source: custom
   root: data/custom_yolo
-  state_path: data/custom_state.json
   auto_prepare: false
+  state_path: data/custom_state.json
   train_samples: 0
   val_samples: 0
   seed: 42
@@ -38,12 +39,12 @@ loss:
   center_radius: 1
 
 train:
-  run_name: custom_resnet34
+  run_name: custom_detector
   output_dir: outputs/runs
   epochs: 50
   batch_size: 4
   val_batch_size: 4
-  workers: 4
+  workers: 2
   pin_memory: true
   drop_last: false
   grad_accum: 2

@@ -11,7 +11,9 @@ model:
   freeze_backbone_epochs: 999
 
 data:
+  source: synthetic
   root: data/smoke_coco_yolo
+  auto_prepare: false
   state_path: data/smoke_state.json
   train_samples: 40
   val_samples: 10
@@ -30,7 +32,6 @@ loss:
   l1_weight: 0.25
   focal_alpha: 0.25
   focal_gamma: 2.0
-  center_radius: 1
 
 train:
   run_name: smoke

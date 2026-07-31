@@ -1,27 +1,32 @@
 seed: 42
 device: auto
 
+classes:
+  - shape
+
 model:
-  num_classes: 3
-  image_size: 256
+  image_size: 128
   backbone: resnet34
   pretrained_backbone: false
-  fpn_channels: 16
-  head_channels: 16
+  fpn_channels: 32
+  head_channels: 32
   freeze_backbone_epochs: 0
 
 data:
-  root: data/smoke_local_yolo
-  state_path: data/smoke_local_state.json
+  source: synthetic
+  root: data/demo_yolo
+  auto_prepare: false
+  state_path: data/demo_state.json
   train_samples: 1
   val_samples: 1
   seed: 42
 
 augmentation:
+  enabled: true
   hsv_h: 0.015
   hsv_s: 0.5
   hsv_v: 0.3
-  hflip_p: 0.0
+  hflip_p: 0.5
 
 loss:
   obj_weight: 1.0
@@ -30,11 +35,12 @@ loss:
   l1_weight: 0.25
   focal_alpha: 0.25
   focal_gamma: 2.0
+  center_radius: 1
 
 train:
-  run_name: smoke_debug
+  run_name: demo_detector
   output_dir: outputs/runs
-  epochs: 1
+  epochs: 2
   batch_size: 1
   val_batch_size: 1
   workers: 0
@@ -45,13 +51,13 @@ train:
   min_lr_ratio: 0.1
   weight_decay: 0.0
   warmup_steps: 0
-  total_steps: 10
+  total_steps: 20
   amp: false
   grad_clip_norm: 5.0
   checkpoint_steps: 5
-  checkpoint_minutes: 999
+  checkpoint_minutes: 60
   val_max_batches: 1
   vis_every_images: 1
   vis_max_images: 1
-  vis_conf_threshold: 0.0
-  vis_iou_threshold: 0.0
+  vis_conf_threshold: 0.1
+  vis_iou_threshold: 0.45
