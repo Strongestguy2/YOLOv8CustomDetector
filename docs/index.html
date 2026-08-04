@@ -3,250 +3,187 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Universal YOLO Detector Demo" />
+    <meta name="description" content="Universal YOLO Detector Tiny Pets demo" />
     <title>Universal YOLO Detector Demo</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="styles.css" />
   </head>
-
   <body>
     <main class="app-shell">
       <header>
         <div>
-          <p class="eyebrow">Demo</p>
+          <p class="eyebrow">Tiny Pets demo</p>
           <h1>Universal YOLO Detector</h1>
-          <p class="lede">
-            Configure, validate, train, predict, evaluate, codeless
-          </p>
+          <p class="lede">A small, local training workspace for cats and dogs.</p>
         </div>
-        <a
-          class="repo-link"
-          href="https://github.com/Strongestguy2/YOLOv8CustomDetector"
-        >
-          View repository ↗
-        </a>
+        <a class="repo-link" href="https://github.com/Strongestguy2/YOLOv8CustomDetector">View repository</a>
       </header>
-      
-    
-      <section class="notice" aria-label="Demo limitation">
-        <strong> Educational purpose only!!!</strong> This page trains a tiny two
-        class photo model of cats and dogs because we all love them. Meanwhile
-        the desktop app uses the full PyTorch detector, datasets, and resumable
-        <code>.pt</code>
-        checkpoints.
-      </section>
-    
 
-      <section class="top-control panel">
-        <label>Active configuration</label>
-        <div class="control-line">
-          <div
-            class="locked grow"
-            tabindex="0"
-            data-tooltip="Load and save any YAML project configuration"
-          >
-            <select disabled aria-label="Active configuration">
-              <option>configs/tiny_pets_demo.yaml</option>
-            </select>
-          </div>
-          <div
-            class="locked"
-            tabindex="0"
-            data-tooltip="Refreshes configuration files"
-          >
-            <button disabled>Refresh configs</button>
-          </div>
-        </div>
+      <section class="notice" aria-label="Demo limitation">
+        <strong>Browser demo.</strong> Training runs locally on eight bundled, generated pet photos. Controls that need the
+        desktop Python app are shown in context and clearly locked.
       </section>
 
       <nav class="tabs" aria-label="Application sections">
-        <span
-          class="locked-tab"
-          tabindex="0"
-          data-tooltip="Configure the training settings"
-          >1. Configure</span
-        >
-        <span
-          class="locked-tab"
-          tabindex="0"
-          data-tooltip="Choose and validate a dataset"
-          >2. Dataset</span
-        >
-        <span class="active-tab" aria-current="page">3. Train</span>
-        <span
-          class="locked-tab"
-          tabindex="0"
-          data-tooltip="Run a trained checkpoint"
-          >4. Predict</span
-        >
-        <span
-          class="locked-tab"
-          tabindex="0"
-          data-tooltip="Calculate AP, precision, recall, and validation loss"
-          >5. Evaluate</span
-        >
-        <span
-          class="locked-tab"
-          tabindex="0"
-          data-tooltip="For full setup guide check README.md"
-          >Help</span
-        >
+        <button class="tab-button active-tab" data-tab="train" aria-selected="true">Train</button>
+        <button class="tab-button" data-tab="customize" aria-selected="false">Customize</button>
+        <button class="tab-button" data-tab="test" aria-selected="false">Test</button>
       </nav>
 
-      <section class="workspace">
-        <aside class="panel controls">
-          <h2>Training controls</h2>
-          <div
-            class="locked"
-            tabindex="0"
-            data-tooltip="Choose smoke test, resume, or branch from checkpoint"
-          >
-            <label>Mode</label><input disabled value="Two-class photo demo" />
+      <section id="train-tab" class="tab-panel active-panel">
+        <section class="panel project-bar">
+          <div class="project-select-wrap">
+            <label for="project-select">Dataset project</label>
+            <select id="project-select">
+              <option value="tiny_pets">Tiny Pets</option>
+              <option value="import">+ Import dataset</option>
+            </select>
           </div>
-          <div
-            class="locked"
-            tabindex="0"
-            data-tooltip="Restores model, optimizer, scheduler, scaler, epoch, and step state"
-          >
-            <label><input type="checkbox" checked disabled /> Resume</label>
+          <div class="project-copy"><strong>Tiny Pets</strong><span>8 images · 2 classes · browser checkpoint</span></div>
+        </section>
+        <section id="import-project-panel" class="panel import-project" hidden>
+          <div class="page-intro"><p class="kicker">NEW PROJECT</p><h2>Initialize a dataset</h2><p>The desktop app creates a project YAML, dataset identity, run folder, and checkpoint namespace.</p></div>
+          <div class="upload-zone locked" tabindex="0" data-tooltip="Dataset initialization requires the desktop Python app.">
+            <span class="upload-icon" aria-hidden="true">+</span>
+            <strong>Upload a YOLO dataset</strong>
+            <small>ZIP with images/train, images/val and matching labels</small>
+            <button disabled>Choose dataset</button>
+            <button disabled class="primary">Initialize project</button>
           </div>
-          <div class="two-col">
-            <div
-              class="locked"
-              tabindex="0"
-              data-tooltip="Set maximum number of steps"
-            >
-              <label>Max steps</label><input disabled value="160" />
-            </div>
-            <div
-              class="locked"
-              tabindex="0"
-              data-tooltip="Set maximum elapsed wall-clock time "
-            >
-              <label>Max hours</label><input disabled value="0" />
-            </div>
-          </div>
-          <div
-            class="locked"
-            tabindex="0"
-            data-tooltip="Auto uses CUDA first, Apple MPS second, and CPU otherwise"
-          >
-            <label>Compute device</label
-            ><input disabled value="Browser CPU (demo only)" />
-          </div>
-          <div class="button-row">
-            <button id="train-button" class="primary">Train / Resume</button>
-            <button id="stop-button" disabled>Stop</button>
-          </div>
-          <div
-            class="locked"
-            tabindex="0"
-            data-tooltip="Creates a separate clean run directory"
-          >
-            <button disabled>Start New Session</button>
-          </div>
-          <div
-            class="locked"
-            tabindex="0"
-            data-tooltip="Removes generated caches"
-          >
-            <button disabled>Clean Project Caches</button>
-          </div>
-          <label>Action status</label>
-          <output id="action-status" class="status-box" aria-live="polite"
-            >Loading the bundled demo…</output
-          >
-        </aside>
+        </section>
+        <div class="workspace">
+          <aside class="controls">
+            <section class="panel control-section">
+              <div class="section-heading">
+                <div><p class="kicker">DATASET</p><h2>Tiny Pets</h2></div>
+                <span class="count-chip">8 images</span>
+              </div>
+              <div class="dataset-summary">
+                <div class="dataset-meta">
+                  <span>Project ID</span>
+                  <strong>tiny_pets</strong>
+                </div>
+                <div class="dataset-meta">
+                  <span>Configuration</span>
+                  <strong>configs/tiny_pets_demo.yaml</strong>
+                </div>
+              </div>
+            </section>
 
-        <div class="results">
-          <section class="panel run-panel">
-            <div class="run-heading">
-              <div>
-                <span class="muted">RUN</span>
-                <h2>Cat / Dog demo</h2>
+            <section class="panel control-section">
+              <div class="section-heading"><div><p class="kicker">LIMITS</p><h2>Training budget</h2></div></div>
+              <div class="limit-control">
+                <label for="max-steps-range">Max steps</label>
+                <div class="range-row">
+                  <input id="max-steps-range" type="range" min="20" max="400" step="10" value="160" />
+                  <input id="max-steps-number" type="number" min="20" max="400" step="10" value="160" aria-label="Enter max steps" />
+                </div>
               </div>
-              <span id="run-badge" class="badge ready">READY</span>
-            </div>
-            <div class="metrics">
-              <div>
-                <span>Epoch</span><strong id="epoch-value">0 / 160</strong>
+              <div class="limit-control">
+                <label for="max-hours-range">Max hours</label>
+                <div class="range-row">
+                  <input id="max-hours-range" type="range" min="0" max="4" step="0.25" value="0" />
+                  <input id="max-hours-number" type="number" min="0" max="4" step="0.25" value="0" aria-label="Enter max hours" />
+                </div>
+                <small class="field-help">0 means no time limit.</small>
               </div>
-              <div><span>Loss</span><strong id="loss-value">—</strong></div>
-              <div>
-                <span>Samples</span><strong id="sample-value">8</strong>
-              </div>
-            </div>
-            <div
-              class="progress-track"
-              role="progressbar"
-              aria-valuemin="0"
-              aria-valuemax="160"
-              aria-valuenow="0"
-            >
-              <span id="progress-fill"></span>
-            </div>
-          </section>
+              <button id="train-button" class="primary">Train / Resume</button>
+              <p class="resume-note">Automatically resumes the last browser checkpoint.</p>
+            </section>
 
-          <section class="grid-two">
-            <article class="panel chart-panel">
-              <div class="panel-title">
-                <h2>Training loss</h2>
-                <span class="legend"><i></i> MSE</span>
+            <details class="panel disclosure">
+              <summary>Advanced</summary>
+              <div class="details-body">
+                <div class="locked" tabindex="0" data-tooltip="Select any YAML project configuration in the desktop app.">
+                  <label>Configuration</label><input disabled value="configs/tiny_pets_demo.yaml" />
+                  <button disabled>Refresh configs</button>
+                </div>
+                <div class="locked" tabindex="0" data-tooltip="Auto prefers CUDA, then MPS, then CPU in the desktop app.">
+                  <label>Compute device</label><input disabled value="Browser CPU (demo)" />
+                </div>
+                <div class="locked" tabindex="0" data-tooltip="Choose a checkpoint and branch name in the desktop app.">
+                  <label>Manual checkpoint</label><input disabled value="Automatic" />
+                </div>
               </div>
-              <canvas
-                id="loss-chart"
-                width="720"
-                height="320"
-                aria-label="Training loss chart"
-              ></canvas>
-            </article>
-            <article class="panel preview-panel">
-              <div class="panel-title">
-                <h2>Prediction vs target</h2>
-                <span class="muted" id="sample-id">cat-01</span>
-              </div>
-              <canvas
-                id="preview"
-                width="520"
-                height="420"
-                aria-label="Bounding box preview"
-              ></canvas>
-              <div class="box-legend">
-                <span class="target-key">Target</span
-                ><span class="prediction-key">Prediction</span>
-              </div>
-            </article>
-          </section>
+            </details>
 
-          <section class="panel log-panel">
-            <h2>Recent training rows</h2>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Epoch</th>
-                    <th>Loss</th>
-                    <th>Total error</th>
-                    <th>Learning rate</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="log-body">
-                  <tr>
-                    <td colspan="5" class="empty">
-                      Click Train / Resume to begin
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
+            <details class="panel disclosure">
+              <summary>Manual debug</summary>
+              <div class="details-body">
+                <label>Action log</label>
+                <output id="action-status" class="status-box" aria-live="polite">Loading the bundled demo...</output>
+                <h3>Recent training rows</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Step</th><th>Loss</th><th>Error</th><th>LR</th><th>Status</th></tr></thead>
+                    <tbody id="log-body"><tr><td colspan="5" class="empty">Click Train / Resume to begin.</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </details>
+          </aside>
+
+          <div class="results">
+            <section class="panel run-panel">
+              <div class="run-heading">
+                <div><p class="kicker">RUN</p><h2>Cat / Dog demo</h2></div>
+                <span id="run-badge" class="badge ready">READY</span>
+              </div>
+              <div class="metrics">
+                <div><span>Step</span><strong id="epoch-value">0 / 160</strong></div>
+                <div><span>Loss</span><strong id="loss-value">-</strong></div>
+                <div><span>Samples</span><strong id="sample-value">8</strong></div>
+              </div>
+              <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="160" aria-valuenow="0">
+                <span id="progress-fill"></span>
+              </div>
+            </section>
+
+            <section class="visual-grid">
+              <article class="panel visual-panel">
+                <div class="panel-title"><h2>Training loss</h2><span class="legend"><i></i>MSE</span></div>
+                <canvas id="loss-chart" width="720" height="360" aria-label="Training loss chart"></canvas>
+              </article>
+              <article class="panel visual-panel">
+                <div class="panel-title"><h2>Prediction vs target</h2><span class="muted" id="sample-id">cat-01</span></div>
+                <canvas id="preview" width="520" height="420" aria-label="Bounding box preview"></canvas>
+                <div class="box-legend"><span class="target-key">Target</span><span class="prediction-key">Prediction</span></div>
+              </article>
+            </section>
+          </div>
         </div>
       </section>
-      <footer>
-        Dataset: 8 AI generated pet photos to avoid copyright issues · Classes:
-        cat and dog
-      </footer>
+
+      <section id="customize-tab" class="tab-panel" hidden>
+        <div class="page-intro"><p class="kicker">CUSTOMIZE</p><h2>Edit project YAML</h2><p>The selected project chooses its default YAML automatically. You can still select or create another configuration.</p></div>
+        <section class="panel customize-toolbar locked" tabindex="0" data-tooltip="Project YAML editing requires the desktop Python app.">
+          <div><label>Project</label><select disabled><option>Tiny Pets</option></select></div>
+          <div><label>YAML being customized</label><select disabled><option>configs/tiny_pets_demo.yaml</option></select></div>
+          <button disabled>Create new config...</button>
+        </section>
+        <div class="config-stack locked" tabindex="0" data-tooltip="These YAML fields are editable in the desktop app.">
+          <section class="panel config-section"><h3>Root</h3><div class="field-grid"><label>Seed<input disabled value="8" /></label><label>Device<input disabled value="browser-cpu" /></label><label class="wide">Classes<textarea disabled>cat
+dog</textarea></label></div></section>
+          <section class="panel config-section"><h3>Model</h3><div class="field-grid"><label>Image size<input disabled value="48" /></label><label>Backbone<input disabled value="tiny-linear-demo" /></label><label>Pretrained<input disabled value="false" /></label></div><details><summary>Advanced model</summary><p>FPN channels · head channels · frozen epochs</p></details></section>
+          <section class="panel config-section"><h3>Data</h3><div class="field-grid"><label>Source<input disabled value="bundled" /></label><label class="wide">Dataset root<input disabled value="docs/demo/tiny_pets" /></label></div><details><summary>Advanced data</summary><p>State path · train samples · validation samples · data seed</p></details></section>
+          <section class="panel config-section"><h3>Augmentation</h3><div class="field-grid"><label>Enabled<input disabled value="false" /></label><label>Horizontal flip<input disabled value="0" /></label></div><details><summary>Advanced augmentation</summary><p>HSV hue · saturation · value</p></details></section>
+          <section class="panel config-section"><h3>Loss</h3><div class="field-grid"><label>Object weight<input disabled value="1" /></label><label>Class weight<input disabled value="1" /></label><label>Box weight<input disabled value="1" /></label></div><details><summary>Advanced loss</summary><p>L1 weight · focal alpha · focal gamma · center radius</p></details></section>
+          <section class="panel config-section"><h3>Train</h3><div class="field-grid"><label>Run name<input disabled value="main" /></label><label>Steps<input disabled value="160" /></label><label>Learning rate<input disabled value="0.12" /></label></div><details><summary>Advanced train</summary><p>Output path · batches · workers · checkpoints · previews</p></details></section>
+        </div>
+        <div class="save-row locked" tabindex="0" data-tooltip="Saving YAML requires the desktop Python app."><button disabled class="primary">Save YAML</button><button disabled>Back to default settings</button></div>
+      </section>
+
+      <section id="test-tab" class="tab-panel" hidden>
+        <div class="page-intro"><p class="kicker">TEST</p><h2>Run a trained model</h2><p>The desktop app accepts one image or a batch of up to 8 images.</p></div>
+        <section class="panel test-card locked" tabindex="0" data-tooltip="Checkpoint testing requires the desktop Python app.">
+          <label>Project</label><input disabled value="Tiny Pets" />
+          <label>Model checkpoint</label><input disabled value="Select a .pt checkpoint" />
+          <div class="upload-zone compact"><strong>Upload test images</strong><small>Maximum 8 JPG, PNG, or WebP files</small><button disabled>Choose images</button></div>
+          <button disabled class="primary">Run test</button>
+        </section>
+      </section>
+
+      <footer>8 generated pet photos · cat and dog · no upload, account, server, or download required</footer>
     </main>
     <script src="app.js" defer></script>
   </body>

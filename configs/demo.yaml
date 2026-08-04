@@ -1,6 +1,12 @@
 seed: 42
 device: auto
 
+project:
+  id: demo_shapes
+  name: Synthetic Shapes
+  default_config: configs/demo.yaml
+  created_at: built-in
+
 classes:
   - shape
 
@@ -38,8 +44,8 @@ loss:
   center_radius: 1
 
 train:
-  run_name: demo_detector
-  output_dir: outputs/runs
+  run_name: main
+  output_dir: outputs/projects/demo_shapes/runs
   epochs: 2
   batch_size: 1
   val_batch_size: 1

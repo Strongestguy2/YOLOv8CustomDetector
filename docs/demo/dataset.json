@@ -1,5 +1,7 @@
 {
   "name": "Tiny Pets",
+  "project_id": "tiny_pets",
+  "dataset_id": "tiny_pets_v1",
   "class_names": ["cat", "dog"],
   "sprite": {"path": "demo/pets-sprite.png", "columns": 4, "rows": 2},
   "samples": [
